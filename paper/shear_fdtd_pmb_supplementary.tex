@@ -1,0 +1,115 @@
+%% Supplementary material for PMB submission:
+%% Reduced viscoelastic FDTD for shear wave propagation
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\graphicspath{{./figures/}}
+
+\title{Supplementary Material:\\
+A reduced viscoelastic FDTD formulation for ultrasound-driven shear wave
+propagation in soft tissue}
+\author{Gianmarco F Pinton}
+\date{}
+
+\begin{document}
+\maketitle
+
+\setcounter{section}{0}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thesubsection}{S\arabic{section}.\arabic{subsection}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\theequation}{S\arabic{equation}}
+
+%% ====================================================================
+\section{Theta-Burst TUS Protocol}
+\label{sec:supp_theta_burst}
+
+The pipeline supports a theta-burst transcranial ultrasound stimulation (TUS)
+protocol motivated by neuromodulation applications.
+
+\paragraph{Protocol parameters.}
+The theta-burst envelope consists of 360~$\mu$s tone-bursts repeated at a
+1~kHz pulse repetition frequency (PRF), grouped into trains of 3~bursts. Each
+3-burst group occupies the first 3~ms of a 200~ms theta period ($1/5$~Hz),
+giving an overall duty cycle of ${\sim}$0.5\%. One complete theta cycle (200~ms)
+is simulated.
+
+\paragraph{Intensity scaling.}
+The acoustic simulation was performed at a source pressure of 1.5~MPa, yielding
+a measured focal $I_{\mathrm{SPPA}} \approx 633$~W/cm$^2$ (after CW envelope
+correction). Typical neuromodulation protocols operate at lower intensities,
+$I_{\mathrm{SPPA}} \approx 20$--$30$~W/cm$^2$. Rather than re-running the
+acoustic simulation, the body force is scaled by the ratio of target-to-simulated
+focal intensity:
+\begin{equation}
+  \bm{f}_{\mathrm{neuro}} = \frac{I_{\mathrm{SPPA}}^{\mathrm{target}}}
+                                  {I_{\mathrm{SPPA}}^{\mathrm{sim}}}
+                            \;\bm{f}_{\mathrm{sim}},
+  \label{eq:arf_scaling}
+\end{equation}
+since the radiation force is proportional to acoustic intensity. For a target of
+30~W/cm$^2$ the scaling factor is $30/633 \approx 0.047$, reducing the peak
+axial force from ${\sim}$41{,}800 to ${\sim}$2{,}000~N/m$^3$.
+
+\paragraph{Results.}
+With the scaled ARF and theta-burst envelope, the shear FDTD solver (12{,}035
+time steps over 200~ms) produces a peak displacement of
+$|u_x|^{\max} \approx 0.3$~nm at the end of the theta cycle. Instantaneous
+displacement during the 3~ms burst window reaches ${\sim}$0.08~$\mu$m before
+viscous damping ($\eta = 0.5$~Pa$\cdot$s) dissipates the motion during the
+subsequent 197~ms off-period. The sub-nanometer residual at cycle end is
+consistent with the very low duty cycle (0.5\%).
+
+
+%% ====================================================================
+\section{From Tissue Displacement to Membrane Tension}
+\label{sec:supp_membrane_tension}
+
+In neuromodulation applications, the quantity that ultimately gates
+mechanosensitive ion channels is not tissue displacement itself but the
+\emph{membrane tension} $T$ (force per unit length, mN/m) experienced by the
+lipid bilayer in which the channel is embedded.
+
+The linearized strain tensor
+$\varepsilon_{ij} = \tfrac{1}{2}(\partial_i u_j + \partial_j u_i)$ is computed
+from the solver displacement field. Because the tissue is nearly
+incompressible, the mechanically relevant component is the deviatoric strain
+norm $\varepsilon_{\mathrm{dev}}$. The effective membrane tension is then
+\begin{equation}
+    T = K_A \,\alpha\, \varepsilon_{\mathrm{dev}},
+    \label{eq:tension}
+\end{equation}
+where $K_A$ is the area-expansion modulus of the lipid bilayer (typically
+0.1--0.5~N/m for biological membranes) and $\alpha$ is a dimensionless
+coupling factor relating far-field tissue strain to local membrane area change.
+
+The tension $T$ enters the Boltzmann gating model for mechanosensitive
+channels. Each channel opens with a steady-state probability
+$P_o(T) = [1 + \exp(-\Delta A\,(T - T_{1/2})/k_BT_{\mathrm{abs}})]^{-1}$,
+where $\Delta A$ is the effective gate area change and $T_{1/2}$ is the
+half-activation tension.
+
+For the channels most relevant to ultrasonic neuromodulation, the
+best-characterized half-activation tensions are: Piezo1,
+$T_{1/2} = 2.7 \pm 0.4$~mN/m; and TRAAK, $T_{1/2} \approx 5$~mN/m. Values
+for TREK-1 (${\sim}$3.5~mN/m) and TREK-2 (${\sim}$4~mN/m) carry larger
+uncertainty.
+
+These tension scales set the target for the simulation pipeline: the shear wave
+solver must resolve displacement gradients accurately enough that the resulting
+membrane tensions can be compared with the channel $T_{1/2}$ values. For a
+representative $K_A = 0.25$~N/m and $\alpha = 1$, a deviatoric strain of
+${\sim}10^{-5}$ produces a membrane tension of ${\sim}2.5$~$\mu$N/m---well
+below channel thresholds---while strains of order $10^{-2}$ reach the
+few-mN/m range where channel gating becomes significant.
+
+
+\bibliographystyle{unsrt}
+\bibliography{general}
+
+\end{document}
