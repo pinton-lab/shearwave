@@ -1,0 +1,212 @@
+# -------- Core options --------
+line-length = 100
+indent-width = 4
+target-version = "py312"
+
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+[lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # Pyflakes
+    "W",      # pycodestyle warnings
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # bugbear (bug-prone patterns)
+    "SIM",    # simplify
+    "S",      # bandit (security)
+    "C4",     # comprehensions
+    "ARG",    # unused function args
+    "ANN",    # type annotations
+    "D",      # docstrings
+    "PL",     # pylint-like
+    "TC",     # type-checking import placement
+    "RET",    # return-value patterns
+    "RUF100", # unused-noqa
+    "FBT",    # boolean-trap
+    "NPY",    # numpy-specific
+]
+
+ignore = [
+    "PLR0913", # too many arguments
+    "PLR0914", # too many locals
+    "PLR1702", # too many branches
+    "PLR2004", # magic numbers
+    "PLR0915", # too many statements
+    "S101",    # assert allowed in non-prod / tests
+    "S404",    # subprocess warning (you already know what you're doing)
+    "CPY001",  # copyright header
+    "ERA001",  # commented-out code
+    "PLR0904",
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D107",
+    "ANN001",
+    "ANN002",
+    "ANN003",
+    "ANN201",
+    "ANN202",
+    "ANN204",
+    "ARG001",
+    "N806",   # physics variable naming (V, T, delta_T, etc.)
+    "RET504",
+    "S101",
+    "PLC0415", # `import` should be at the top-level of a file
+]
+
+"examples/**" = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D107",
+    "ANN001",
+    "ANN002",
+    "ANN003",
+    "ANN201",
+    "ANN202",
+    "ANN204",
+    "ARG001",   # unused args in plot helpers
+    "B905",     # zip() without strict=
+    "F841",     # unused intermediate variables (colorbars, etc.)
+    "FBT003",   # boolean positional values in matplotlib calls
+    "N803",     # physics variable naming
+    "N806",     # physics variable naming
+    "PLC0415",  # conditional imports (e.g. skimage)
+    "PLR0912",  # complex main() functions
+]
+
+# Example: allow more imperative / exploratory style in notebooks.
+"notebooks/**" = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D107",
+    "ANN001",
+    "ANN002",
+    "ANN003",
+    "ANN201",
+    "ANN202",
+    "ANN204",
+]
+
+# Shear FDTD: allow uppercase dX/dY/dZ (physics convention)
+"fullwave/shear_wave/shear_fdtd_staggered_3d.py" = ["N803"]
+
+# Acoustic strain: allow uppercase dX/dY/dZ and K (physics convention)
+"fullwave/shear_wave/acoustic_strain.py" = ["N803", "N806"]
+
+# Strain: allow uppercase dX/dY/dZ (physics convention)
+"fullwave/shear_wave/strain.py" = ["N803"]
+
+# Bioheat: physics variable naming (T for temperature, Tp for padded)
+"fullwave/bioheat/**" = ["N803", "N806"]
+
+# Bioheat docs/scripts: matplotlib.use() requires import ordering, path setup
+"fullwave/bioheat/docs/**" = [
+    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204",
+    "D100", "D103", "D104",
+    "E402", "I001",
+    "N803", "N806",
+]
+
+# Neuromodulation: physics variable naming (V, T, I_Na, K_A, E_rev, etc.)
+"fullwave/neuromodulation/**" = ["N803", "N806", "N815", "B905", "PLC0415"]
+
+# Neuromodulation docs/scripts: path setup requires late imports, plot helpers
+"fullwave/neuromodulation/docs/**" = [
+    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204",
+    "D100", "D103", "D104",
+    "E402", "I001",
+    "E741",
+    "F841",
+    "FBT003",
+    "N803", "N806",
+    "PLR0912",
+    "PLW3301",
+]
+
+# Validation scripts: relax annotations, naming, and complexity rules
+"fullwave/shear_wave/validation/**" = [
+    "ANN001",
+    "ANN002",
+    "ANN003",
+    "ANN201",
+    "ANN202",
+    "ANN204",
+    "B905",
+    "C901",
+    "COM812",
+    "D100",
+    "D103",
+    "D104",
+    "D413",
+    "FBT003",
+    "ICN001",
+    "N803",
+    "N806",
+    "PLR0912",
+    "PLR0915",
+    "PLW2901",
+    "PTH123",
+    "RUF046",
+]
+
+[lint.pydocstyle]
+convention = "numpy"
+
+
+[format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = 120
