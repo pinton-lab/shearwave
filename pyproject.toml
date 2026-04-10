@@ -20,6 +20,7 @@ dependencies = [
 jax = ["jax[cpu]"]
 jax-gpu = ["jax[cuda12]"]
 viz = ["matplotlib"]
+fullwave = ["fullwave25"]
 dev = ["pytest", "ruff", "matplotlib"]
 
 [tool.hatch.build.targets.wheel]
