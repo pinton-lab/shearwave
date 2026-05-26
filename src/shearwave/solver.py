@@ -243,6 +243,7 @@ def shear_fdtd_staggered_jax(  # noqa: PLR0912, PLR0915
     trace_indices=None,
     return_traces=False,
     return_device=False,
+    snapshot_stride=None,
 ):
     """3D staggered-grid shear FDTD solver using JAX.
 
@@ -251,6 +252,15 @@ def shear_fdtd_staggered_jax(  # noqa: PLR0912, PLR0915
     When ``opts["env_t"]`` is provided (a 1-D array of length *n_steps*), the
     body forces are treated as 3-D spatial patterns and the Helmholtz projection
     is pre-computed once, then scaled by ``env_t[it]`` each step.
+
+    When ``snapshot_stride`` is provided (a positive int dividing ``n_steps``),
+    the solver returns an additional array of shape
+    ``(n_steps // snapshot_stride, nx, ny, nz, 3)`` holding ``u_curr`` at the
+    end of every ``snapshot_stride`` steps. Snapshots stay on device when
+    ``return_device=True`` and are converted to NumPy otherwise. The per-snap
+    memory cost is ``nx * ny * nz * 3 * 4`` bytes (~17.7 MB at 145x101x101);
+    callers control the time resolution via ``snapshot_stride``. Not supported
+    together with ``return_traces=True`` in v1.
     """
     _require_jax()
     # Determine grid shape from any provided body-force component
@@ -264,6 +274,20 @@ def shear_fdtd_staggered_jax(  # noqa: PLR0912, PLR0915
     if return_traces and trace_indices is None:
         msg = "trace_indices must be provided when return_traces=True."
         raise ValueError(msg)
+    if snapshot_stride is not None:
+        if not isinstance(snapshot_stride, (int, np.integer)) or int(snapshot_stride) <= 0:
+            msg = "snapshot_stride must be a positive integer."
+            raise ValueError(msg)
+        snapshot_stride = int(snapshot_stride)
+        if n_steps % snapshot_stride != 0:
+            msg = (
+                f"n_steps ({n_steps}) must be a multiple of snapshot_stride "
+                f"({snapshot_stride})."
+            )
+            raise ValueError(msg)
+        if return_traces:
+            msg = "return_traces and snapshot_stride are not both supported in v1."
+            raise ValueError(msg)
 
     opts = opts or {}
     vel_damp = float(opts.get("vel_damp", 0.0))
@@ -406,6 +430,65 @@ def shear_fdtd_staggered_jax(  # noqa: PLR0912, PLR0915
         else:
             traces_t = jnp.zeros((0,), dtype=jnp.float32)
         return u_next, traces_t
+
+    def _force_at(idx):
+        """Return (fx, fy, fz) at step ``idx``, projected and ready for _fdtd_core."""
+        if use_precomputed_projection:
+            scale = env_t_jax[idx]
+            return fx0 * scale, fy0 * scale, fz0 * scale
+        fx_in = lax.dynamic_index_in_dim(bx_t, idx, axis=0, keepdims=False)
+        fy_in = lax.dynamic_index_in_dim(by_t, idx, axis=0, keepdims=False)
+        fz_in = lax.dynamic_index_in_dim(bz_t, idx, axis=0, keepdims=False)
+        return project_vector_field_jax(
+            fx_in,
+            fy_in,
+            fz_in,
+            dX,
+            dY,
+            dZ,
+            poisson_tol,
+            poisson_max_iters,
+        )
+
+    if snapshot_stride is not None:
+        stride = snapshot_stride
+        n_snap = n_steps // stride
+
+        def inner_body(i_inner, carry):
+            base, u_prev_s, u_curr_s = carry
+            idx = base + i_inner
+            fx, fy, fz = _force_at(idx)
+            u_next, _ = _fdtd_core(u_prev_s, u_curr_s, fx, fy, fz)
+            return (base, u_curr_s, u_next)
+
+        def outer_step(carry, base):
+            u_prev_s, u_curr_s = carry
+            _, u_prev_new, u_curr_new = lax.fori_loop(
+                0,
+                stride,
+                inner_body,
+                (base, u_prev_s, u_curr_s),
+            )
+            return (u_prev_new, u_curr_new), u_curr_new
+
+        def run_snapshot_scan(u_prev0, u_curr0):
+            bases = jnp.arange(0, n_snap * stride, stride, dtype=jnp.int32)
+            (u_prev_f, u_curr_f), snaps = lax.scan(
+                outer_step,
+                (u_prev0, u_curr0),
+                bases,
+            )
+            return u_prev_f, u_curr_f, snaps
+
+        if use_jit:
+            run_snapshot_scan = jit(run_snapshot_scan)
+
+        u_prev_f, u_curr_f, snapshots = run_snapshot_scan(u_prev, u_curr)
+        u_center = u_curr_f
+        v_center = (u_curr_f - u_prev_f) / dT
+        if return_device:
+            return u_center, v_center, snapshots
+        return np.asarray(u_center), np.asarray(v_center), np.asarray(snapshots)
 
     if use_precomputed_projection:
 
