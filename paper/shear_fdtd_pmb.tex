@@ -46,7 +46,7 @@ radiation-force sources, a pre-computed projection reduces this cost by one to
 two orders of magnitude. Validation studies in homogeneous media demonstrate
 recovery of the theoretical shear wavespeed to within $<$0.1\% (linear-fit
 estimate on a $180^3$ grid), second-order convergence under grid refinement
-(trace $L_2$ slope 1.83), and agreement with analytical Kelvin--Voigt
+(clean trace-$L_2$ self-convergence, $p\gtrsim2$), and agreement with analytical Kelvin--Voigt
 attenuation and phase speed predictions to within ${\sim}3\%$ and $<$0.5\%,
 respectively, over a 16-point viscosity sweep ($\eta \in [0, 1.5]$~Pa$\cdot$s).
 An end-to-end benchmark against the RSNA QIBA elastic phantom standard recovers
@@ -657,63 +657,68 @@ this non-viscous benchmark regime.
 \label{sec:convergence}
 
 An inviscid convergence sweep was performed with fixed physical domain size
-($L_x=L_y=L_z=36$~mm), fixed physical sensor distances, and a six-level
-refinement range. The Gaussian source width
-($\sigma_{xy}=5$ grid points) and velocity damping coefficient
-($\gamma_v=0.001$) are held constant across all levels so that any differences
-are due purely to grid resolution. Table~\ref{tab:convergence} summarizes the recovered wavespeeds at each grid
-resolution.  As the grid is refined from $n=60$ to $n=180$, the mean
-speed $\bar{c}$ converges monotonically from 1.828 to 1.972~m/s and the
-linear-fit speed converges from 2.193 to 1.998~m/s.
+($L_x=L_y=L_z=36$~mm) and fixed physical sensor distances, over a five-level
+refinement range $n\in\{60,90,120,150,180\}$ chosen so that the sensor
+distances fall exactly on grid nodes at every level. So that each grid
+discretizes the \emph{same} continuum problem, the Gaussian excitation is held
+at a fixed \emph{physical} width ($\sigma_{xy}=3$~mm, i.e.\ $5$ grid points at
+the coarsest level and proportionally more as the grid refines) and the
+velocity-damping coefficient is scaled per time step so that the cumulative
+damping over the fixed time window is grid-independent. Holding the source width
+at a fixed number of grid points instead---so that its physical size shrinks
+under refinement---conflates discretization error with a changing source, and is
+avoided here.
+
+Convergence is quantified by the full-waveform \emph{trace $L_2$ error}: the
+relative $L_2$ norm of the velocity-trace difference at each sensor
+(interpolated onto a common time base), averaged across sensors, measured
+against the finest grid ($n=180$) as a self-convergence reference. Unlike a
+scalar arrival-time speed, it captures the whole waveform.
+Table~\ref{tab:convergence} lists the error at each level and
+Fig.~\ref{fig:convergence} shows it against grid spacing. The error falls
+monotonically from $2.7\%$ to $0.2\%$. Fitting
+trace-$L_2 \propto \Delta x^p$ in log--log space gives a global slope
+$p=2.9$ ($R^2=0.97$); the well-separated levels give per-interval orders
+$p\approx2.2$--$2.9$, with the pair nearest the reference inflated by the
+self-convergence reference (a known bias of self-convergence studies). This
+confirms convergence at least as fast as the formal second-order accuracy of the
+7-point Laplacian stencil and leapfrog time integration.
 
 \begin{table}
-\caption{Grid convergence of recovered shear wavespeed (target $c_s = 2.000$~m/s,
-  $L = 36$~mm fixed domain).  $\bar{c}$ and $c_{\mathrm{fit}}$ denote the
-  mean and linear-fit wavespeeds, respectively.}
+\caption{Grid convergence of the full-waveform trace $L_2$ self-convergence
+  error (relative $L_2$ norm of the velocity traces against the finest grid,
+  $n=180$; fixed $36$~mm domain, fixed $3$~mm physical source).}
 \centering
-\begin{tabular}{c c c c}
+\begin{tabular}{c c c}
 \hline
-$n$ & $\Delta x$ ($\mu$m) & $\bar{c}$ (m/s) & $c_{\mathrm{fit}}$ (m/s) \\
+$n$ & $\Delta x$ ($\mu$m) & trace $L_2$ error \\
 \hline
-60  & 600 & 1.828 & 2.193 \\
-80  & 450 & 1.907 & 2.048 \\
-100 & 360 & 1.938 & 2.053 \\
-120 & 300 & 1.954 & 2.017 \\
-150 & 240 & 1.968 & 2.007 \\
-180 & 200 & 1.972 & 1.998 \\
+60  & 600 & 2.65\% \\
+90  & 400 & 1.08\% \\
+120 & 300 & 0.47\% \\
+150 & 240 & 0.17\% \\
+180 & 200 & --- (reference) \\
 \hline
 \end{tabular}
 \label{tab:convergence}
 \end{table}
 
-Two complementary error metrics quantify convergence.  The \emph{wavespeed
-error}, $|\bar{c}-c_{\mathrm{target}}|$, is the absolute difference
-between the mean recovered speed and the analytical
-target. It is a scalar metric derived from discrete peak-picking.  The
-\emph{trace $L_2$ error} is the relative $L_2$ norm of the velocity trace
-difference at each sensor, averaged across sensors, measured against the
-finest grid ($n=180$) as reference. It captures full-waveform convergence rather
-than a single arrival time. Fitting $|\bar{c}-c_{\mathrm{target}}| \propto \Delta x^p$ in log--log space
-gives a global slope of $p=1.68$ ($R^2=0.98$), and the trace $L_2$ metric gives a
-global slope of $p=1.83$ ($R^2=0.90$).
-Both metrics confirm convergence consistent with the second-order spatial
-discretization (7-point Laplacian stencil) and second-order leapfrog time
-integration. The trace $L_2$ metric, which captures the full waveform rather
-than a single scalar, yields a cleaner slope ($p\approx1.83$) closer to the
-theoretical $O(\Delta x^2)$ rate. At the finest level ($n=180$), the
-linear-fit speed reaches 1.998~m/s ($<$0.1\% error).
+We deliberately do \emph{not} use the arrival-time wavespeed error as a
+grid-convergence metric. With the source width held physically fixed, the
+peak-picked wavespeed reflects a source-width- and near-field-dependent
+estimation bias that does not vanish under refinement, so it is not a clean
+measure of discretization error. The accuracy of the recovered wavespeed itself
+is instead established by the non-viscous benchmark
+(Fig.~\ref{fig:nonvisc_validation}, linear-fit speed within $<$0.1\%).
 
 
 \begin{figure}
 \centering
-\includegraphics[width=0.49\textwidth]{convergence_mean_error_only.png}%
-\hfill
-\includegraphics[width=0.49\textwidth]{convergence_trace_l2.png}
-\caption{Grid convergence study. \textbf{Left:} Wavespeed convergence
-($|\bar{c} - c_{\mathrm{target}}|$) vs grid spacing (log--log).
-Fitted slope 1.68, $R^2=0.98$. \textbf{Right:} Trace $L_2$ convergence
-(relative $L_2$ error of velocity traces vs finest grid). Fitted slope 1.83,
-$R^2=0.90$. Dashed reference lines show $O(\Delta x)$ and
+\includegraphics[width=0.6\textwidth]{convergence_trace_l2.png}
+\caption{Grid convergence of the full-waveform trace $L_2$ self-convergence
+error (relative $L_2$ error of velocity traces vs the finest grid) against grid
+spacing (log--log), for a fixed $3$~mm physical source. The fitted global slope
+is $p\approx2.9$ ($R^2=0.97$); dashed reference lines show $O(\Delta x)$ and
 $O(\Delta x^2)$.}
 \label{fig:convergence}
 \end{figure}
