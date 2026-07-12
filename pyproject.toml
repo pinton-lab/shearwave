@@ -7,7 +7,7 @@ name = "shearwave"
 version = "0.1.0"
 description = "Viscoelastic FDTD shear wave solver with Kelvin-Voigt damping"
 readme = "README.md"
-license = "BSD-3-Clause"
+license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [
     { name = "Gianmarco F Pinton" },
