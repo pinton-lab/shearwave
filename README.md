@@ -33,3 +33,7 @@ u, v = shear_fdtd_staggered(bx, by, bz, rho, mu, dX, dY, dZ, dT, nT, opts={})
 - Acoustic radiation force computation (plane-wave and Poynting vector)
 - Strain tensor and invariant computation
 - Acoustic strain and strain gradient analysis
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
