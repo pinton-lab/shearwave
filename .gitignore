@@ -10,3 +10,17 @@ build/
 *.npz
 *.npy
 *.dat
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.tar.gz
+
+# validation/figure run outputs (regenerable; see paper/REPRODUCE.md)
+paper/figures/convergence_run*/
+validation/qiba_run/
+validation/convergence/
+refcheck_results.json
