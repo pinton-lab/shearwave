@@ -30,35 +30,29 @@
 \begin{abstract}
 Ultrasound-driven shear wave propagation in soft tissue underlies shear wave
 elastography (SWE) and emerging elastomechanical hypotheses of ultrasonic
-neuromodulation. Accurate modeling of radiation-force--induced tissue motion is
-therefore of central importance. However, general-purpose finite element
+neuromodulation, both of which require accurate, efficient modeling of
+radiation-force--induced tissue motion. General-purpose finite-element
 elastodynamic solvers are often computationally expensive and unnecessarily
-broad for shear-dominant ultrasound applications. We derive a reduced
-viscoelastic formulation by systematically applying near-incompressibility,
-small-strain linearization, Helmholtz decomposition, and solenoidal force
-projection to the full Navier equations, yielding a Kelvin--Voigt shear wave
-equation that retains only the transverse dynamics relevant to radiation-force--
-induced motion. An explicit finite-difference time-domain (FDTD) implementation
-is developed with second-order accuracy in space and time. The solenoidal
-constraint on the body force is enforced via a matrix-free conjugate gradient
-(CG) Poisson solve; for the practically important case of separable
-radiation-force sources, a pre-computed projection reduces this cost by one to
-two orders of magnitude. Validation studies in homogeneous media demonstrate
-recovery of the theoretical shear wavespeed to within $<$0.1\% (linear-fit
-estimate on a $180^3$ grid), second-order convergence under grid refinement
-(clean trace-$L_2$ self-convergence, $p\gtrsim2$), and agreement with analytical Kelvin--Voigt
-attenuation and phase speed predictions to within ${\sim}3\%$ and $<$0.5\%,
-respectively, over a 16-point viscosity sweep ($\eta \in [0, 1.5]$~Pa$\cdot$s).
-An end-to-end benchmark against the RSNA QIBA elastic phantom standard recovers
-shear wave speeds to within ${\sim}1\%$ across a tenfold range of shear moduli
-($G = 1$--$10$~kPa).
-The reduced FDTD framework provides a lightweight, physically transparent
-alternative to full multiphysics elasticity solvers that accommodates spatial
-heterogeneity in shear modulus, density, and viscosity and facilitates
-integration with acoustic simulation tools.
-End-to-end transcranial demonstrations through realistic micro-CT skull
-geometries are presented using two transducer configurations, producing shear
-displacements of 1--3~$\mu$m consistent with clinical ARFI measurements.
+broad for shear-dominant applications. We derive a reduced viscoelastic
+formulation by applying near-incompressibility, small-strain linearization,
+Helmholtz decomposition, and solenoidal force projection to the full Navier
+equations, yielding a Kelvin--Voigt shear wave equation that retains only the
+transverse dynamics relevant to radiation-force--induced motion. An explicit
+finite-difference time-domain (FDTD) implementation with second-order spatial
+and temporal accuracy enforces the solenoidal body-force constraint via a
+matrix-free conjugate-gradient Poisson solve; for separable radiation-force
+sources, a pre-computed projection reduces this cost by one to two orders of
+magnitude. In homogeneous media the solver recovers the theoretical shear
+wavespeed to within $<$0.1\%, exhibits clean second-order grid convergence
+(trace-$L_2$ self-convergence, $p\gtrsim2$), and matches analytical
+Kelvin--Voigt attenuation and phase speed to within ${\sim}3\%$ and $<$1\% over
+a 16-point viscosity sweep ($\eta\in[0,1.5]$~Pa$\cdot$s). An end-to-end RSNA
+QIBA phantom benchmark recovers shear wave speeds to within ${\sim}1\%$ across a
+tenfold shear-modulus range ($G=1$--$10$~kPa). Accommodating spatial
+heterogeneity in shear modulus, density, and viscosity, the framework integrates
+with acoustic simulators; transcranial demonstrations through micro-CT skull
+geometries produce shear displacements of 1.7--5~$\mu$m consistent with clinical
+ARFI.
 \end{abstract}
 
 %% ====================================================================
@@ -572,7 +566,7 @@ axis~\cite{nyborg1965acoustic,torr1984acoustic}:
   \label{eq:isppa_norm}
 \end{equation}
 where $\alpha_{\mathrm{Np}}$ is the absorption in Np/m at the transmit
-frequency. The plan wave approximation is easier to implement for non-vectorial estimates of the pressure wave-field. However, for converging beams the plane-wave assumption breaks down near the
+frequency. The plane-wave approximation is easier to implement for non-vectorial estimates of the pressure wave-field. However, for converging beams the plane-wave assumption breaks down near the
 focal zone and a more accurate approach uses the time-averaged Poynting vector
 $\bm{I} = \langle p\, \bm{v} \rangle$:
 \begin{equation}
@@ -770,13 +764,14 @@ scheduling. \textbf{Left:} Attenuation (measured vs theory).
 \end{figure}
 
 Table~\ref{tab:kv_results} presents representative results from the 16-point
-viscosity sweep.  Across the full range $\eta \in [0.1, 1.5]$~Pa$\cdot$s, the
+viscosity sweep.  Across the viscosity sweep (attenuation quoted for $\eta\ge0.1$~Pa$\cdot$s,
+where it is resolvable), the
 measured attenuation tracks the Kelvin--Voigt prediction with a mean absolute
-error of ${\sim}$3\%, while the phase speed agrees to within $<$0.5\%.  Both
+error of ${\sim}$3\%, while the phase speed agrees to within $<$1\%.  Both
 measured quantities increase monotonically with viscosity, consistent with the
-analytical dispersion relation. The results demonstrate 
-robust attenuation recovery across the full viscosity range, confirming the implicit
-viscous time-stepping scheme.
+analytical dispersion relation. The results demonstrate
+robust attenuation recovery across the full viscosity range, confirming accurate
+recovery of the analytical Kelvin--Voigt attenuation and dispersion.
 
 
 \begin{table}
@@ -1041,7 +1036,7 @@ ultrasonic neuromodulation~\cite{felix2022flexo}.
 
 \subsection{Physical assumptions}
 
-The solver is derived under a small-strain linearization i.e. displacement gradients
+The solver is derived under a small-strain linearization, i.e., displacement gradients
 are assumed to be small, and the stress--strain relationship is linear. This is
 typically appropriate for ultrasound radiation-force excitations in
 SWE~\cite{sarvazyan1998elasticity,barr2015elastography}, where observed tissue
@@ -1134,10 +1129,10 @@ resulting brain tissue displacements are sub-micrometer to a few micrometers.
 \hline
 $f_0$ (MHz) & $\alpha_{\mathrm{Np}}$ (Np/m) & $b$ (N/m$^3$) \\
 \hline
-1   &  5.8  & 750   \\
-3   & 17.3  & 2\,250  \\
-5   & 28.8  & 37\,400 \\
-6.7 & 38.6  & 50\,100 \\
+1   &  5.8  & 75\,300  \\
+3   & 17.3  & 224\,700 \\
+5   & 28.8  & 374\,000 \\
+6.7 & 38.6  & 501\,300 \\
 \hline
 \end{tabular}
 \end{table}
@@ -1176,7 +1171,7 @@ Validation in homogeneous benchmark media demonstrates accurate recovery of the
 imposed shear wavespeed under controlled conditions ($<$0.1\% error at the
 finest grid), second-order convergence under grid refinement, and agreement with
 analytical Kelvin--Voigt attenuation and phase speed predictions (${\sim}$3\%
-and $<$0.5\%, respectively). An end-to-end benchmark against the RSNA QIBA
+and $<$1\%, respectively). An end-to-end benchmark against the RSNA QIBA
 elastic phantom standard confirms accurate shear wave speed recovery
 (${\sim}$1\% error) across a tenfold range of shear moduli, validating the
 complete acoustic--elastic pipeline including radiation force computation.
@@ -1184,7 +1179,7 @@ The pre-computed Helmholtz projection for separable
 body forces reduces simulation time by one to two orders of magnitude in
 typical ARF-driven scenarios.
 
-The principal limitations are those implied by the model reduction which include compressional
+The principal limitations are those implied by the model reduction: compressional
 dynamics, mode conversion at interfaces, anisotropy, strong heterogeneity,
 broadband frequency-dependent viscoelasticity, and late-time reflection
 artifacts are not fully represented. Within its intended scope, the reduced
@@ -1195,7 +1190,7 @@ interest~\cite{sarvazyan1998elasticity,bercoff2004supersonic,barr2015elastograph
 End-to-end transcranial demonstrations with sparse phased array and
 curved-bowl transducer geometries confirm integration with GPU acoustic
 simulators and radiation force computation through realistic skull models,
-producing shear displacements of 1--3~$\mu$m consistent with clinical ARFI
+producing shear displacements of 1.7--5~$\mu$m consistent with clinical ARFI
 measurements. The computational efficiency of the reduced solver broadens
 applications to inverse problems, iterative methods, and machine learning data
 generation tasks.

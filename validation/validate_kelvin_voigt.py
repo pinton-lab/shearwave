@@ -676,8 +676,8 @@ def main():
         help="Comma-separated eta list. Overrides eta-min/max/num when provided.",
     )
     parser.add_argument("--eta-min", type=float, default=0.0)
-    parser.add_argument("--eta-max", type=float, default=1.0)
-    parser.add_argument("--eta-num", type=int, default=11)
+    parser.add_argument("--eta-max", type=float, default=1.5)
+    parser.add_argument("--eta-num", type=int, default=16)
     parser.add_argument("--nx", type=int, default=1200)
     parser.add_argument("--dx", type=float, default=1.0e-4)
     parser.add_argument("--rho", type=float, default=1000.0)
