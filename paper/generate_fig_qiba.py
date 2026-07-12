@@ -17,7 +17,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # --- Paths ---
-data_dir = Path(__file__).parent.parent.parent / "validation" / "qiba_run"
+# repo layout: shearwave/paper/generate_fig_qiba.py -> shearwave/validation/qiba_run
+data_dir = Path(__file__).parent.parent / "validation" / "qiba_run"
 out_dir = Path(__file__).parent / "figures"
 out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -30,20 +31,6 @@ PHANTOMS = {
 }
 RHO = 1000.0
 
-
-def load_phantom_traces(name):
-    """Load displacement traces and metadata for a phantom."""
-    save_dir = data_dir / name
-    # Look for the npz or reconstruct from the run
-    # We re-run the shear sim to get the full traces
-    # For now, read from the saved summary
-    summary = np.load(data_dir / "qiba_fullwave_summary.npz", allow_pickle=True)
-    idx = list(summary["phantoms"]).index(name)
-    return {
-        "cs_analytical": float(summary["cs_analytical"][idx]),
-        "cs_measured": float(summary["cs_measured"][idx]),
-        "error_pct": float(summary["error_pct"][idx]),
-    }
 
 
 def _build_gaussian_arf(dx):
@@ -161,7 +148,7 @@ def _plot_arf(ax, b0, dx):
 
 def _run_kymograph_sim(phantom_name, b0, dx):
     """Run shear FDTD with dense lateral sampling for kymograph."""
-    from fullwave.shear_wave import shear_fdtd_staggered
+    from shearwave import shear_fdtd_staggered
 
     ph = PHANTOMS[phantom_name]
     mu = ph["G_Pa"]

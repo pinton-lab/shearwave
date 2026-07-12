@@ -93,6 +93,24 @@ def main():
         default=0.001,
         help="Velocity damping coefficient (fixed across levels)",
     )
+    parser.add_argument(
+        "--sigma-phys",
+        type=float,
+        default=None,
+        help="Physical Gaussian source width in metres, held constant across "
+        "levels.  Overrides --sigma-xy; per level sigma_xy = sigma_phys / dX so "
+        "that every grid launches the same continuum source (fair convergence "
+        "test).  When omitted, the legacy grid-point --sigma-xy is used.",
+    )
+    parser.add_argument(
+        "--damp-mode",
+        choices=["fixed", "constant-total"],
+        default="fixed",
+        help="'fixed': vel-damp is applied per step at every level (legacy; "
+        "total damping over Tmax then depends on the grid because n_steps ~ 1/dX). "
+        "'constant-total': vel-damp is scaled per level so the total damping over "
+        "Tmax is grid-independent.",
+    )
     args = parser.parse_args()
 
     Lx = Ly = Lz = float(args.L)
@@ -106,6 +124,14 @@ def main():
     eta = float(args.eta)
     sigma_xy = float(args.sigma_xy)
     vel_damp = float(args.vel_damp)
+    sigma_phys = None if args.sigma_phys is None else float(args.sigma_phys)
+    damp_mode = args.damp_mode
+
+    def _n_steps(nn):
+        dT = CFL * (Lx / nn) / (cs_target * np.sqrt(3.0))
+        return int(np.ceil(Tmax / dT))
+
+    n_steps_coarse = _n_steps(min(n_levels))
 
     # Keep physical sensor positions fixed across grids (first 4 points only)
     sensor_distances_m = np.array([3.6, 6.0, 8.4, 10.8], dtype=float) * 1e-3
@@ -128,8 +154,18 @@ def main():
         level_dir = out_dir / f"n{n}"
         level_dir.mkdir(parents=True, exist_ok=True)
 
+        # Physical source width (fair test) vs legacy grid-point width.
+        level_sigma_xy = (sigma_phys / dX) if sigma_phys is not None else sigma_xy
+        # Constant-total damping: scale per step so (1-vel_damp)^n_steps is
+        # grid-independent (n_steps ~ 1/dX), else apply vel_damp per step.
+        if damp_mode == "constant-total":
+            level_vel_damp = 1.0 - (1.0 - vel_damp) ** (n_steps_coarse / _n_steps(n))
+        else:
+            level_vel_damp = vel_damp
+
         print(
-            f"\nLevel n={n}: dX={dX:.3e} m, offsets={sensor_offsets.tolist()}",
+            f"\nLevel n={n}: dX={dX:.3e} m, offsets={sensor_offsets.tolist()}, "
+            f"sigma_xy={level_sigma_xy:.2f} cells, vel_damp={level_vel_damp:.5f}",
             flush=True,
         )
         res = None
@@ -154,8 +190,8 @@ def main():
                 amplitude=amplitude,
                 sensor_offsets=sensor_offsets,
                 eta=eta,
-                sigma_xy=sigma_xy,
-                vel_damp=vel_damp,
+                sigma_xy=level_sigma_xy,
+                vel_damp=level_vel_damp,
                 save_dir=level_dir,
                 make_plots=False,
                 make_movie=False,
@@ -265,17 +301,17 @@ def main():
     etrace = np.array([r.get("trace_rel_l2_vs_ref", np.nan) for r in rows_sorted], dtype=float)
 
     fig, ax = plt.subplots(figsize=(7, 5))
-    ax.loglog(dx, np.maximum(efit, 1e-12), "o-", label="|c_fit - c_target|")
-    ax.loglog(dx, np.maximum(emean, 1e-12), "s-", label="|mean4 - c_target|")
+    ax.loglog(dx, np.maximum(efit, 1e-12), "o-", label=r"$|c_\mathrm{fit} - c_\mathrm{target}|$")
+    ax.loglog(dx, np.maximum(emean, 1e-12), "s-", label=r"$|\bar{c} - c_\mathrm{target}|$")
     finite_trace = np.isfinite(etrace) & (etrace > 0)
     if np.any(finite_trace):
         ax.loglog(
             dx[finite_trace],
             etrace[finite_trace],
             "^-",
-            label="trace rel L2 vs finest",
+            label=r"trace relative $L_2$ vs finest",
         )
-    ax.set_xlabel("Grid spacing dX (m)")
+    ax.set_xlabel(r"Grid spacing $\Delta x$ (m)")
     ax.set_ylabel("Error metric")
     ax.set_title("Shear-wave convergence (inviscid)")
     ax.grid(True, which="both", alpha=0.3)
@@ -295,7 +331,7 @@ def main():
         r2 = r_vals**2
 
         fig, ax = plt.subplots(figsize=(7, 5))
-        ax.loglog(dx[valid_mean], emean[valid_mean], "s-", label="|mean4 - c_target|")
+        ax.loglog(dx[valid_mean], emean[valid_mean], "s-", label=r"$|\bar{c} - c_\mathrm{target}|$")
         dx_fit = np.linspace(dx[valid_mean].min(), dx[valid_mean].max(), 50)
         ax.loglog(
             dx_fit,
@@ -304,13 +340,13 @@ def main():
             color="gray",
             label=f"slope = {slope:.3f} ($R^2$ = {r2:.4f})",
         )
-        ax.set_xlabel("Grid spacing dX (m)")
-        ax.set_ylabel("|mean4 - c_target| (m/s)")
-        ax.set_title("Shear-wave convergence: mean4 error (inviscid)")
+        ax.set_xlabel(r"Grid spacing $\Delta x$ (m)")
+        ax.set_ylabel(r"$|\bar{c} - c_\mathrm{target}|$ (m/s)")
+        ax.set_title("Shear-wave wavespeed convergence (inviscid)")
         ax.grid(True, which="both", alpha=0.3)
         ax.legend()
         fig.tight_layout()
-        fig.savefig(out_dir / "convergence_mean4_error_only.png", dpi=150)
+        fig.savefig(out_dir / "convergence_mean_error_only.png", dpi=150)
         plt.close(fig)
 
     # Trace L2 convergence plot with fitted slope
@@ -329,7 +365,7 @@ def main():
             etrace[valid_trace],
             "^-",
             color="C2",
-            label="trace rel L2 vs finest",
+            label=r"trace relative $L_2$ vs finest",
         )
         dx_fit_t = np.linspace(dx[valid_trace].min(), dx[valid_trace].max(), 50)
         ax.loglog(
@@ -352,9 +388,9 @@ def main():
                 alpha=0.5,
                 label=f"O($\\Delta x^{{{ref_p:.0f}}}$)",
             )
-        ax.set_xlabel("Grid spacing dX (m)")
-        ax.set_ylabel("Relative L2 trace error vs finest grid")
-        ax.set_title("Shear-wave convergence: trace L2 (inviscid)")
+        ax.set_xlabel(r"Grid spacing $\Delta x$ (m)")
+        ax.set_ylabel(r"Relative $L_2$ trace error vs finest grid")
+        ax.set_title(r"Shear-wave convergence: trace $L_2$ (inviscid)")
         ax.grid(True, which="both", alpha=0.3)
         ax.legend()
         fig.tight_layout()
