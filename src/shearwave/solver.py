@@ -561,16 +561,24 @@ def elastic_solve_static(
     *,
     verbose=False,
 ):
-    """Solve mu * laplace(u) = -bz with zero Dirichlet boundary via CG."""
+    """Solve mu * laplace(u) = -bz with zero Dirichlet boundary via CG.
+
+    CG requires an SPD operator.  ``mu * laplace`` is negative-definite, so we
+    solve the equivalent SPD system ``(-mu * laplace) u = bz`` (i.e. we negate
+    both the operator and the right-hand side).  The previous formulation used
+    ``+mu * laplace`` with rhs ``-bz``, which is negative-definite and caused
+    the CG loop to terminate on the first iteration (``denom <= 0``), returning
+    an all-zero displacement.
+    """
     nx, ny, nz = bz.shape
     mu_field = _prepare_material_field(mu, nx, ny, nz)
-    rhs = -bz.astype(np.float32)
+    rhs = bz.astype(np.float32)
     u = np.zeros_like(rhs, dtype=np.float32)
     mask = np.zeros_like(rhs, dtype=np.float32)
     mask[1:-1, 1:-1, 1:-1] = 1.0
 
     def apply_a(x):
-        return mu_field * laplacian_center(x, dX, dY, dZ)
+        return -mu_field * laplacian_center(x, dX, dY, dZ)
 
     r = rhs - apply_a(u)
     r *= mask
@@ -643,7 +651,7 @@ def project_vector_field(
         fz *= mask_center
         return fx, fy, fz
 
-    phi = poisson_cg(div_f, dX, dY, dZ, mask_center, tol=tol, max_iters=max_iters)
+    phi = poisson_cg(-div_f, dX, dY, dZ, mask_center, tol=tol, max_iters=max_iters)
     gx, gy, gz = gradient_center(phi, dX, dY, dZ)
     fx = (fx - gx) * mask_center
     fy = (fy - gy) * mask_center
@@ -776,7 +784,7 @@ def gradient_center_jax(phi, dX, dY, dZ):
 
 
 def poisson_cg_jax(rhs, dX, dY, dZ, mask_center, tol=1e-4, max_iters=200):
-    """Solve Poisson equation via conjugate gradient (JAX)."""
+    """Solve ``div(grad(phi)) = -rhs`` via CG (JAX; see :func:`poisson_cg`)."""
     _require_jax()
     rhs = jnp.asarray(rhs)
     dtype = rhs.dtype
@@ -784,7 +792,8 @@ def poisson_cg_jax(rhs, dX, dY, dZ, mask_center, tol=1e-4, max_iters=200):
     phi0 = jnp.zeros_like(rhs)
 
     def apply_a(x):
-        return -laplacian_center_jax(x, dX, dY, dZ)
+        gx, gy, gz = gradient_center_jax(x, dX, dY, dZ)
+        return -divergence_center_jax(gx, gy, gz, dX, dY, dZ)
 
     r0 = (rhs - apply_a(phi0)) * mask
     p0 = r0
@@ -852,7 +861,7 @@ def project_vector_field_jax(
         return fx * mask_center, fy * mask_center, fz * mask_center
 
     def do_projection(_):
-        phi = poisson_cg_jax(div_f, dX, dY, dZ, mask_center, tol=tol, max_iters=max_iters)
+        phi = poisson_cg_jax(-div_f, dX, dY, dZ, mask_center, tol=tol, max_iters=max_iters)
         gx, gy, gz = gradient_center_jax(phi, dX, dY, dZ)
         return (fx - gx) * mask_center, (fy - gy) * mask_center, (fz - gz) * mask_center
 
@@ -936,7 +945,15 @@ def project_face_forces(
     tol,
     max_iters,
 ):
-    """Project face-centered forces to be divergence-free."""
+    """Project face-centered forces to be divergence-free.
+
+    NOTE: currently unused (no call site).  It also predates the fix to
+    :func:`poisson_cg`, which now inverts the collocated ``div_center(grad_center)``
+    operator rather than the face-based Laplacian implied by these staggered
+    differences.  If this staggered projection path is revived, ``poisson_cg``
+    must be given a face-consistent operator (and the RHS sign checked); as
+    written the two operators are mismatched.
+    """
     div_q = (
         (bx_face[1:, :, :] - bx_face[:-1, :, :]) / dX
         + (by_face[:, 1:, :] - by_face[:, :-1, :]) / dY
@@ -963,13 +980,22 @@ def project_face_forces(
 
 
 def poisson_cg(rhs, dX, dY, dZ, mask_center, tol=1e-4, max_iters=200):
-    """Solve Poisson equation via conjugate gradient."""
+    """Solve the discrete Poisson equation ``div(grad(phi)) = -rhs`` via CG.
+
+    The operator is the composition ``div_center(grad_center(.))`` (not the
+    compact 7-point ``laplacian_center``).  Using the same first-difference
+    div/grad operators that the Helmholtz projection applies is what makes
+    ``f - grad(phi)`` discretely divergence-free; inverting the compact
+    Laplacian instead leaves a residual divergence.  Callers pass ``-div_f`` so
+    that ``phi`` satisfies ``div(grad(phi)) = div_f``.
+    """
     rhs64 = rhs.astype(np.float64, copy=False)
     mask64 = mask_center.astype(np.float64, copy=False)
     phi = np.zeros_like(rhs64)
 
     def apply_a(x):
-        return -laplacian_center(x, dX, dY, dZ)
+        gx, gy, gz = gradient_center(x, dX, dY, dZ)
+        return -divergence_center(gx, gy, gz, dX, dY, dZ)
 
     r = (rhs64 - apply_a(phi)) * mask64
     p = r.copy()
