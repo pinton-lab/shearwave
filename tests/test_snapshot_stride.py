@@ -12,7 +12,7 @@ import pytest
 
 pytest.importorskip("jax")
 
-from shearwave.solver import shear_fdtd_staggered, shear_fdtd_staggered_jax
+from shearwave.solver import shear_fdtd, shear_fdtd_jax
 
 
 def _build_problem(nx=16, ny=12, nz=16, n_steps=24):
@@ -59,7 +59,7 @@ def _numpy_snapshots(bz_4d, opts, grid, stride):
         if (it + 1) % stride == 0:
             snaps.append(np.array(u_center, copy=True))
 
-    u_np, _v = shear_fdtd_staggered(
+    u_np, _v = shear_fdtd(
         None,
         None,
         bz_4d,
@@ -75,7 +75,7 @@ def test_snapshot_stride_matches_numpy_4d(stride):
     b3, env, bz_4d, opts, grid = _build_problem(n_steps=24)
     u_np, np_snaps = _numpy_snapshots(bz_4d, opts, grid, stride)
 
-    u_jax, _v, jax_snaps = shear_fdtd_staggered_jax(
+    u_jax, _v, jax_snaps = shear_fdtd_jax(
         None,
         None,
         bz_4d,
@@ -96,7 +96,7 @@ def test_snapshot_stride_matches_numpy_separable():
     stride = 6
     u_np, np_snaps = _numpy_snapshots(bz_4d, opts, grid, stride)
 
-    u_jax, _v, jax_snaps = shear_fdtd_staggered_jax(
+    u_jax, _v, jax_snaps = shear_fdtd_jax(
         None,
         None,
         b3,
@@ -116,7 +116,7 @@ def test_snapshot_stride_separable_matches_4d_jax():
     b3, env, bz_4d, opts, grid = _build_problem(n_steps=24)
     stride = 6
 
-    _u4, _v4, snaps_4d = shear_fdtd_staggered_jax(
+    _u4, _v4, snaps_4d = shear_fdtd_jax(
         None,
         None,
         bz_4d,
@@ -124,7 +124,7 @@ def test_snapshot_stride_separable_matches_4d_jax():
         snapshot_stride=stride,
         **grid,
     )
-    _ue, _ve, snaps_sep = shear_fdtd_staggered_jax(
+    _ue, _ve, snaps_sep = shear_fdtd_jax(
         None,
         None,
         b3,
@@ -141,7 +141,7 @@ def test_snapshot_stride_returns_device_arrays_when_requested():
     b3, env, _bz4, opts, grid = _build_problem(n_steps=24)
     stride = 6
 
-    u, v, snaps = shear_fdtd_staggered_jax(
+    u, v, snaps = shear_fdtd_jax(
         None,
         None,
         b3,
@@ -159,7 +159,7 @@ def test_snapshot_stride_returns_device_arrays_when_requested():
 def test_snapshot_stride_rejects_non_divisible():
     b3, env, _bz4, opts, grid = _build_problem(n_steps=24)
     with pytest.raises(ValueError, match=r"multiple of snapshot_stride"):
-        shear_fdtd_staggered_jax(
+        shear_fdtd_jax(
             None,
             None,
             b3,
@@ -172,7 +172,7 @@ def test_snapshot_stride_rejects_non_divisible():
 def test_snapshot_stride_rejects_non_positive():
     b3, env, _bz4, opts, grid = _build_problem(n_steps=24)
     with pytest.raises(ValueError, match=r"positive integer"):
-        shear_fdtd_staggered_jax(
+        shear_fdtd_jax(
             None,
             None,
             b3,
@@ -185,7 +185,7 @@ def test_snapshot_stride_rejects_non_positive():
 def test_snapshot_stride_conflicts_with_return_traces():
     b3, env, _bz4, opts, grid = _build_problem(n_steps=24)
     with pytest.raises(ValueError, match=r"not both supported"):
-        shear_fdtd_staggered_jax(
+        shear_fdtd_jax(
             None,
             None,
             b3,
@@ -200,7 +200,7 @@ def test_snapshot_stride_conflicts_with_return_traces():
 def test_default_path_unchanged_without_snapshot_stride():
     """Sanity: omitting snapshot_stride must keep the 2-tuple return contract."""
     b3, env, _bz4, opts, grid = _build_problem(n_steps=12)
-    out = shear_fdtd_staggered_jax(
+    out = shear_fdtd_jax(
         None,
         None,
         b3,

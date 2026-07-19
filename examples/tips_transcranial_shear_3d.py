@@ -43,7 +43,7 @@ from shearwave import (
     compute_acoustic_strain_peak,
     compute_radiation_force,
     compute_radiation_force_velocity,
-    shear_fdtd_staggered,
+    shear_fdtd,
 )
 from fullwave.transducers import create_tips_transducer
 from fullwave.utils import plot_utils
@@ -1311,7 +1311,7 @@ def main(
                 snapshots_xz.append(u_center[:, ny_mid_ds, :, 0].copy())
 
         print("\nRunning shear wave FDTD solver...")
-        u, v = shear_fdtd_staggered(
+        u, v = shear_fdtd(
             bx=bx,
             by=by,
             bz=bz,

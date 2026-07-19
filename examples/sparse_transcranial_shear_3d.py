@@ -37,7 +37,7 @@ from fullwave.medium_builder.presets import BackgroundDomain, MicroCTSkullDomain
 from shearwave import (
     compute_radiation_force,
     compute_radiation_force_velocity,
-    shear_fdtd_staggered,
+    shear_fdtd,
 )
 from fullwave.utils import plot_utils
 from fullwave.utils.nrrd_reader import download_halle_skull
@@ -1340,7 +1340,7 @@ def main(
                 snapshots_xz.append(u_center[:, ny_mid_ds, :, 0].copy())
 
         print("\nRunning shear wave FDTD solver...")
-        u, v = shear_fdtd_staggered(
+        u, v = shear_fdtd(
             bx=bx,
             by=by,
             bz=bz,

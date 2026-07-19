@@ -1,4 +1,4 @@
-"""3D staggered-grid shear FDTD solver with Kelvin-Voigt viscoelasticity.
+"""3D collocated cell-centered shear FDTD solver with Kelvin-Voigt viscoelasticity.
 
 Solves: rho * d^2u/dt^2 = mu * laplace(u) + eta * laplace(du/dt) + f_S
 
@@ -24,7 +24,7 @@ except Exception:  # pragma: no cover - optional dependency
     _HAS_JAX = False
 
 
-def shear_fdtd_staggered(  # noqa: PLR0912, PLR0915
+def shear_fdtd(  # noqa: PLR0912, PLR0915
     bx,
     by,
     bz,
@@ -38,7 +38,7 @@ def shear_fdtd_staggered(  # noqa: PLR0912, PLR0915
     opts=None,
     callback=None,
 ):
-    """3D staggered-grid shear FDTD solver (CPU, numpy).
+    """3D collocated cell-centered shear FDTD solver (CPU, numpy).
 
     Parameters
     ----------
@@ -218,7 +218,7 @@ def shear_fdtd_staggered(  # noqa: PLR0912, PLR0915
             callback(it, u_next)
 
         if verbose and (it + 1) % progress_every == 0:
-            print(f"Staggered it={it + 1}/{n_steps}")
+            print(f"FDTD it={it + 1}/{n_steps}")
 
         u_prev, u_curr = u_curr, u_next.copy()
 
@@ -227,7 +227,7 @@ def shear_fdtd_staggered(  # noqa: PLR0912, PLR0915
     return u_center, v_center
 
 
-def shear_fdtd_staggered_jax(  # noqa: PLR0912, PLR0915
+def shear_fdtd_jax(  # noqa: PLR0912, PLR0915
     bx,
     by,
     bz,
@@ -245,7 +245,7 @@ def shear_fdtd_staggered_jax(  # noqa: PLR0912, PLR0915
     return_device=False,
     snapshot_stride=None,
 ):
-    """3D staggered-grid shear FDTD solver using JAX.
+    """3D collocated cell-centered shear FDTD solver using JAX.
 
     Returns either NumPy arrays (default) or device arrays if return_device=True.
 
@@ -269,7 +269,7 @@ def shear_fdtd_staggered_jax(  # noqa: PLR0912, PLR0915
         msg = "At least one body-force component must be provided."
         raise ValueError(msg)
     if callback is not None:
-        msg = "callback is not supported in shear_fdtd_staggered_jax."
+        msg = "callback is not supported in shear_fdtd_jax."
         raise ValueError(msg)
     if return_traces and trace_indices is None:
         msg = "trace_indices must be provided when return_traces=True."

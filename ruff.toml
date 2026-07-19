@@ -134,7 +134,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 ]
 
 # Shear FDTD: allow uppercase dX/dY/dZ (physics convention)
-"fullwave/shear_wave/shear_fdtd_staggered_3d.py" = ["N803"]
+"src/shearwave/solver.py" = ["N803"]
 
 # Acoustic strain: allow uppercase dX/dY/dZ and K (physics convention)
 "fullwave/shear_wave/acoustic_strain.py" = ["N803", "N806"]
