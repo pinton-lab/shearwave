@@ -11,16 +11,11 @@ build/
 *.npy
 *.dat
 
-# LaTeX build artifacts
-paper/*.aux
-paper/*.bbl
-paper/*.blg
-paper/*.log
-paper/*.out
-paper/*.tar.gz
+# Manuscripts / papers are kept out of the repo (distributed via arXiv).
+paper/
+docs/
 
-# validation/figure run outputs (regenerable; see paper/REPRODUCE.md)
-paper/figures/convergence_run*/
+# validation/figure run outputs (regenerable)
 validation/qiba_run/
 validation/convergence/
 refcheck_results.json

@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the paper below."
+title: "shearwave: a viscoelastic FDTD shear wave solver"
+type: software
+authors:
+  - family-names: Pinton
+    given-names: Gianmarco F
+    orcid: "https://orcid.org/0000-0002-7367-2090"
+    affiliation: "Joint Department of Biomedical Engineering, University of North Carolina at Chapel Hill and North Carolina State University"
+license: Apache-2.0
+repository-code: "https://github.com/pinton-lab/shearwave"
+version: 0.1.0
+keywords:
+  - FDTD
+  - shear wave
+  - elastography
+  - viscoelastic
+  - Kelvin-Voigt
+  - ultrasound
+preferred-citation:
+  type: article
+  title: "A reduced viscoelastic FDTD formulation for ultrasound-driven shear wave propagation in soft tissue"
+  authors:
+    - family-names: Pinton
+      given-names: Gianmarco F
+      orcid: "https://orcid.org/0000-0002-7367-2090"
+  journal: "Physics in Medicine & Biology"
+  year: 2026

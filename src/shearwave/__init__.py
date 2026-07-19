@@ -4,6 +4,13 @@ A staggered-grid finite-difference time-domain solver for shear wave
 propagation in viscoelastic media with Kelvin-Voigt damping.
 """
 
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("shearwave")
+except PackageNotFoundError:  # not installed (e.g. running from a source checkout)
+    __version__ = "0.1.0"
+
 from .acoustic_strain import (
     compute_acoustic_strain_gradient,
     compute_acoustic_strain_gradient_peak,
@@ -25,6 +32,7 @@ from .solver import (
 from .strain import compute_strain_invariants, compute_strain_tensor
 
 __all__ = [
+    "__version__",
     "compute_acoustic_strain_gradient",
     "compute_acoustic_strain_gradient_peak",
     "compute_acoustic_strain_peak",
