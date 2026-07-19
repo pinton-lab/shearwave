@@ -32,12 +32,16 @@ import matplotlib
 import numpy as np
 
 matplotlib.use("Agg", force=True)
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-
 import fullwave
+import matplotlib.pyplot as plt
 from fullwave.medium_builder import MediumBuilder
 from fullwave.medium_builder.presets import BackgroundDomain, MicroCTSkullDomain
+from fullwave.transducers import create_tips_transducer
+from fullwave.utils import plot_utils
+from fullwave.utils.nrrd_reader import download_halle_skull
+from fullwave.utils.slab_extraction import Placement
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
 from shearwave import (
     compute_acoustic_strain_gradient_peak,
     compute_acoustic_strain_peak,
@@ -45,10 +49,6 @@ from shearwave import (
     compute_radiation_force_velocity,
     shear_fdtd,
 )
-from fullwave.transducers import create_tips_transducer
-from fullwave.utils import plot_utils
-from fullwave.utils.nrrd_reader import download_halle_skull
-from fullwave.utils.slab_extraction import Placement
 
 logger = logging.getLogger(__name__)
 

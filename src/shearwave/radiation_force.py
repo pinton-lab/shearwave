@@ -84,7 +84,7 @@ def compute_radiation_force_velocity(
     velocity_w_4d: NDArray[np.floating],
     velocity_v_4d: NDArray[np.floating],
     c_map: NDArray[np.floating],
-    rho_map: NDArray[np.floating],
+    rho_map: NDArray[np.floating],  # noqa: ARG001  kept for interface parity with compute_radiation_force
     alpha_coeff_map: NDArray[np.floating],
     f0: float,
     gate: slice | NDArray[np.integer] | None = None,

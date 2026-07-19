@@ -115,9 +115,9 @@ def test_projection_numpy_jax_parity_is_divergence_free(seed):
     rng = np.random.default_rng(seed)
     # smooth, boundary-tapered random field
     taper = (np.sin(np.pi * x) * np.sin(np.pi * y) * np.sin(np.pi * z)).astype(np.float32)
-    fx = (rng.standard_normal((n, n, n)).astype(np.float32) * taper) * np.ones((n, n, n), np.float32)
-    fy = (rng.standard_normal((n, n, n)).astype(np.float32) * taper) * np.ones((n, n, n), np.float32)
-    fz = (rng.standard_normal((n, n, n)).astype(np.float32) * taper) * np.ones((n, n, n), np.float32)
+    fx = rng.standard_normal((n, n, n)).astype(np.float32) * taper
+    fy = rng.standard_normal((n, n, n)).astype(np.float32) * taper
+    fz = rng.standard_normal((n, n, n)).astype(np.float32) * taper
     nx, ny, nz = project_vector_field(fx.copy(), fy.copy(), fz.copy(), d, d, d, 1e-8, 5000)
     jx, jy, jz = (np.asarray(a) for a in project_vector_field_jax(fx, fy, fz, d, d, d, 1e-8, 5000))
     # backend agreement

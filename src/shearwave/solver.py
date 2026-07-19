@@ -9,7 +9,7 @@ with a Helmholtz-Hodge projection via conjugate-gradient Poisson solver.
 Supports both NumPy (CPU) and JAX (GPU/TPU) backends.
 """
 
-# ruff: noqa: ANN001, ANN201, ANN202, BLE001, C901, FBT002, FBT003, RUF059, SIM108
+# ruff: noqa: ANN001, ANN201, ANN202, FBT002, FBT003, SIM108
 
 import numpy as np
 
@@ -24,7 +24,7 @@ except Exception:  # pragma: no cover - optional dependency
     _HAS_JAX = False
 
 
-def shear_fdtd(  # noqa: PLR0912, PLR0915
+def shear_fdtd(  # noqa: PLR0912
     bx,
     by,
     bz,
@@ -227,7 +227,7 @@ def shear_fdtd(  # noqa: PLR0912, PLR0915
     return u_center, v_center
 
 
-def shear_fdtd_jax(  # noqa: PLR0912, PLR0915
+def shear_fdtd_jax(  # noqa: PLR0912
     bx,
     by,
     bz,
@@ -280,10 +280,7 @@ def shear_fdtd_jax(  # noqa: PLR0912, PLR0915
             raise ValueError(msg)
         snapshot_stride = int(snapshot_stride)
         if n_steps % snapshot_stride != 0:
-            msg = (
-                f"n_steps ({n_steps}) must be a multiple of snapshot_stride "
-                f"({snapshot_stride})."
-            )
+            msg = f"n_steps ({n_steps}) must be a multiple of snapshot_stride ({snapshot_stride})."
             raise ValueError(msg)
         if return_traces:
             msg = "return_traces and snapshot_stride are not both supported in v1."

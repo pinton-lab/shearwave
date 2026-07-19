@@ -15,7 +15,6 @@ import numpy as np
 
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
-
 from validate_wavespeed import run_validation
 
 

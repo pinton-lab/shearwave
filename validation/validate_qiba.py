@@ -236,9 +236,7 @@ def run_phantom(
         "progress_every": max(1, n_steps // 6),
     }
 
-    shear_fdtd(
-        bx, None, None, rho, mu, dx, dx, dx, dT, n_steps, opts=opts, callback=callback
-    )
+    shear_fdtd(bx, None, None, rho, mu, dx, dx, dx, dT, n_steps, opts=opts, callback=callback)
 
     # Group velocity (measured from velocity traces = dU/dt)
     c_group, peak_times, vel_traces = _measure_group_velocity(traces, distances, t_vec, cs)

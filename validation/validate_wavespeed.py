@@ -65,7 +65,8 @@ def run_validation(
         movie_every: Frame save interval for movie.
         movie_dir: Directory for movie frames.
 
-    Returns:
+    Returns
+    -------
         Dictionary with wavespeed results including sensor traces,
         arrival times, and recovered speeds.
 
