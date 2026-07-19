@@ -111,6 +111,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "B905",     # zip() without strict=
     "F841",     # unused intermediate variables (colorbars, etc.)
     "FBT003",   # boolean positional values in matplotlib calls
+    "D401",     # non-imperative docstrings in figure helpers
     "N803",     # physics variable naming
     "N806",     # physics variable naming
     "PLC0415",  # conditional imports (e.g. skimage)
@@ -137,46 +138,23 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 "src/shearwave/solver.py" = ["N803"]
 
 # Acoustic strain: allow uppercase dX/dY/dZ and K (physics convention)
-"fullwave/shear_wave/acoustic_strain.py" = ["N803", "N806"]
+"src/shearwave/acoustic_strain.py" = ["N803", "N806"]
 
 # Strain: allow uppercase dX/dY/dZ (physics convention)
-"fullwave/shear_wave/strain.py" = ["N803"]
+"src/shearwave/strain.py" = ["N803"]
 
-# Bioheat: physics variable naming (T for temperature, Tp for padded)
-"fullwave/bioheat/**" = ["N803", "N806"]
-
-# Bioheat docs/scripts: matplotlib.use() requires import ordering, path setup
-"fullwave/bioheat/docs/**" = [
-    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204",
-    "D100", "D103", "D104",
-    "E402", "I001",
-    "N803", "N806",
-]
-
-# Neuromodulation: physics variable naming (V, T, I_Na, K_A, E_rev, etc.)
-"fullwave/neuromodulation/**" = ["N803", "N806", "N815", "B905", "PLC0415"]
-
-# Neuromodulation docs/scripts: path setup requires late imports, plot helpers
-"fullwave/neuromodulation/docs/**" = [
-    "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204",
-    "D100", "D103", "D104",
-    "E402", "I001",
-    "E741",
-    "F841",
-    "FBT003",
-    "N803", "N806",
-    "PLR0912",
-    "PLW3301",
-]
+# Radiation force: allow uppercase physics variable naming
+"src/shearwave/radiation_force.py" = ["N803", "N806"]
 
 # Validation scripts: relax annotations, naming, and complexity rules
-"fullwave/shear_wave/validation/**" = [
+"validation/**" = [
     "ANN001",
     "ANN002",
     "ANN003",
     "ANN201",
     "ANN202",
     "ANN204",
+    "ARG001",   # unused args in helper/plot functions
     "B905",
     "C901",
     "COM812",
@@ -193,6 +171,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "PLW2901",
     "PTH123",
     "RUF046",
+    "SIM108",   # if/else over ternary is fine in scripts
 ]
 
 [lint.pydocstyle]
