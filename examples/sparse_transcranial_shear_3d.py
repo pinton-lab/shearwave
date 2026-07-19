@@ -19,6 +19,7 @@ Figures produced (7 categories):
 import argparse
 import logging
 import math
+import os
 import shutil
 from pathlib import Path
 
@@ -44,10 +45,18 @@ from fullwave.utils.slab_extraction import Placement
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SPARSE_MAT = "/celerina/gfp/mfs/fullwave2_sparse_transcranial/Sparse_TransConnector.mat"
+# Path to the sparse-array connector file. Override with --connector-path or
+# the SHEARWAVE_SPARSE_MAT environment variable; defaults to the file name in
+# the current working directory.
+DEFAULT_SPARSE_MAT = os.environ.get("SHEARWAVE_SPARSE_MAT", "Sparse_TransConnector.mat")
 
-# Docs figures directory (for LaTeX appendix)
-DOCS_FIGURES_DIR = Path(__file__).resolve().parent.parent / "paper" / "figures"
+# Optional directory to also copy figures into (e.g. a manuscript figures dir).
+# Disabled unless SHEARWAVE_DOCS_FIGURES_DIR is set.
+DOCS_FIGURES_DIR = (
+    Path(os.environ["SHEARWAVE_DOCS_FIGURES_DIR"])
+    if os.environ.get("SHEARWAVE_DOCS_FIGURES_DIR")
+    else None
+)
 
 
 # ---------------------------------------------------------------------------

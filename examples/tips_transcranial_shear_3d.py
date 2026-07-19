@@ -24,6 +24,7 @@ Figures produced (10 categories):
 import argparse
 import logging
 import math
+import os
 import shutil
 from pathlib import Path
 
@@ -51,8 +52,13 @@ from fullwave.utils.slab_extraction import Placement
 
 logger = logging.getLogger(__name__)
 
-# Docs figures directory (for LaTeX appendix)
-DOCS_FIGURES_DIR = Path(__file__).resolve().parent.parent / "paper" / "figures"
+# Optional directory to also copy figures into (e.g. a manuscript figures dir).
+# Disabled unless SHEARWAVE_DOCS_FIGURES_DIR is set.
+DOCS_FIGURES_DIR = (
+    Path(os.environ["SHEARWAVE_DOCS_FIGURES_DIR"])
+    if os.environ.get("SHEARWAVE_DOCS_FIGURES_DIR")
+    else None
+)
 
 
 # ---------------------------------------------------------------------------
