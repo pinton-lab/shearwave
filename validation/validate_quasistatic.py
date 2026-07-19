@@ -14,7 +14,7 @@ from shearwave import (
     hann1d,
     laplacian_center,
     project_body_force_to_shear,
-    shear_fdtd_staggered,
+    shear_fdtd,
 )
 
 
@@ -73,8 +73,8 @@ def main():
         "progress_every": max(1, n_steps // 5),
     }
 
-    print("Running staggered-grid shear FDTD...")
-    u_fdtd, v_fdtd = shear_fdtd_staggered(bx, by, bz, rho, mu, dX, dY, dZ, dT, n_steps, opts=opts)
+    print("Running collocated shear FDTD...")
+    u_fdtd, v_fdtd = shear_fdtd(bx, by, bz, rho, mu, dX, dY, dZ, dT, n_steps, opts=opts)
     u_fdtd_z = u_fdtd[..., 2]
     v_norm = np.linalg.norm(v_fdtd.reshape(-1, 3))
     print(f"Final velocity L2 norm = {v_norm:.3e} m/s")

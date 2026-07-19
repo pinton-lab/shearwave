@@ -1,6 +1,6 @@
 # shearwave
 
-A staggered-grid finite-difference time-domain (FDTD) solver for shear wave propagation in viscoelastic media with Kelvin-Voigt damping.
+A collocated (cell-centered) finite-difference time-domain (FDTD) solver for shear wave propagation in viscoelastic media with Kelvin-Voigt damping.
 
 ## Installation
 
@@ -17,15 +17,15 @@ pip install -e ".[jax-gpu]"
 
 ```python
 import numpy as np
-from shearwave import shear_fdtd_staggered
+from shearwave import shear_fdtd
 
 # Define body force, material properties, grid spacing, time step
-u, v = shear_fdtd_staggered(bx, by, bz, rho, mu, dX, dY, dZ, dT, nT, opts={})
+u, v = shear_fdtd(bx, by, bz, rho, mu, dX, dY, dZ, dT, nT, opts={})
 ```
 
 ## Features
 
-- 3D staggered-grid FDTD with central-difference time stepping
+- 3D collocated (cell-centered) FDTD with central-difference time stepping
 - Kelvin-Voigt viscoelastic damping
 - Helmholtz-Hodge decomposition for divergence-free force projection
 - Conjugate-gradient Poisson solver

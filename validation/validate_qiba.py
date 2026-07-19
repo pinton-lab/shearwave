@@ -29,7 +29,7 @@ import numpy as np
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 
-from shearwave import shear_fdtd_staggered
+from shearwave import shear_fdtd
 
 try:
     from scipy.io import loadmat
@@ -236,7 +236,7 @@ def run_phantom(
         "progress_every": max(1, n_steps // 6),
     }
 
-    shear_fdtd_staggered(
+    shear_fdtd(
         bx, None, None, rho, mu, dx, dx, dx, dT, n_steps, opts=opts, callback=callback
     )
 

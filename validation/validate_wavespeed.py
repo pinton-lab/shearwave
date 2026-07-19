@@ -15,7 +15,7 @@ import numpy as np
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 
-from shearwave import hann1d, shear_fdtd_staggered
+from shearwave import hann1d, shear_fdtd
 
 
 def run_validation(
@@ -139,8 +139,8 @@ def run_validation(
         "env_t": env_t,
     }
 
-    print("Running staggered-grid shear FDTD impulse response...")
-    shear_fdtd_staggered(
+    print("Running collocated shear FDTD impulse response...")
+    shear_fdtd(
         None,
         None,
         bz,

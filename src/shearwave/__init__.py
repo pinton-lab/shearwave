@@ -1,6 +1,6 @@
 """Shearwave: viscoelastic FDTD shear wave solver.
 
-A staggered-grid finite-difference time-domain solver for shear wave
+A collocated cell-centered finite-difference time-domain solver for shear wave
 propagation in viscoelastic media with Kelvin-Voigt damping.
 """
 
@@ -26,8 +26,8 @@ from .solver import (
     laplacian_center,
     project_body_force_to_shear,
     project_vector_field,
-    shear_fdtd_staggered,
-    shear_fdtd_staggered_jax,
+    shear_fdtd,
+    shear_fdtd_jax,
 )
 from .strain import compute_strain_invariants, compute_strain_tensor
 
@@ -48,6 +48,6 @@ __all__ = [
     "laplacian_center",
     "project_body_force_to_shear",
     "project_vector_field",
-    "shear_fdtd_staggered",
-    "shear_fdtd_staggered_jax",
+    "shear_fdtd",
+    "shear_fdtd_jax",
 ]
