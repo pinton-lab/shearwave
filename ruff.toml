@@ -57,6 +57,7 @@ select = [
 
 ignore = [
     "PLR0913", # too many arguments
+    "PLR0917", # too many positional arguments (numeric APIs take many; stabilised in ruff 0.16)
     "PLR0914", # too many locals
     "PLR1702", # too many branches
     "PLR2004", # magic numbers

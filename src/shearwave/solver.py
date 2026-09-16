@@ -64,6 +64,13 @@ def shear_fdtd(  # noqa: PLR0912
             forces f(x,t) = b0(x)*g(t) and avoids per-step CG solves.
           - poisson_tol (1e-5)
           - poisson_max_iters (200)
+          - reproject_every (0) - if > 0, re-apply the Helmholtz projection to
+            the displacement history (u_curr and u_prev) every this many
+            steps. The zero-Dirichlet box boundary is not solenoidal-
+            preserving, so reflections from the domain edge inject
+            divergence at a rate proportional to the wall-normal
+            displacement; this option removes it at the cost of two CG
+            solves per event. 0 (default) leaves the scheme unchanged.
           - verbose (False)
           - progress_every (max(1, n_steps//10))
     callback : callable(it, u_center), optional
@@ -87,6 +94,10 @@ def shear_fdtd(  # noqa: PLR0912
     vel_damp = opts.get("vel_damp", 0.0)
     poisson_tol = opts.get("poisson_tol", 1e-5)
     poisson_max_iters = opts.get("poisson_max_iters", 200)
+    reproject_every = int(opts.get("reproject_every", 0) or 0)
+    if reproject_every < 0:
+        msg = "reproject_every must be a non-negative integer."
+        raise ValueError(msg)
     verbose = opts.get("verbose", False)
     progress_every = opts.get("progress_every", max(1, n_steps // 10))
 
@@ -222,6 +233,11 @@ def shear_fdtd(  # noqa: PLR0912
 
         u_prev, u_curr = u_curr, u_next.copy()
 
+        if reproject_every and (it + 1) % reproject_every == 0:
+            for arr in (u_curr, u_prev):
+                px, py, pz = project_force(arr[..., 0], arr[..., 1], arr[..., 2])
+                arr[..., 0], arr[..., 1], arr[..., 2] = px, py, pz
+
     u_center = u_curr.copy()
     v_center = (u_curr - u_prev) / dT
     return u_center, v_center
@@ -287,6 +303,9 @@ def shear_fdtd_jax(  # noqa: PLR0912
             raise ValueError(msg)
 
     opts = opts or {}
+    if opts.get("reproject_every"):
+        msg = "reproject_every is only implemented in the NumPy solver (shear_fdtd)."
+        raise NotImplementedError(msg)
     vel_damp = float(opts.get("vel_damp", 0.0))
     poisson_tol = float(opts.get("poisson_tol", 1e-5))
     poisson_max_iters = int(opts.get("poisson_max_iters", 200))
@@ -632,13 +651,21 @@ def project_vector_field(
     tol,
     max_iters,
 ):
-    """Project a vector field to be divergence-free (Helmholtz decomposition)."""
-    fx = fx.astype(np.float32, copy=False)
-    fy = fy.astype(np.float32, copy=False)
-    fz = fz.astype(np.float32, copy=False)
+    """Project a vector field to be divergence-free (Helmholtz decomposition).
+
+    The field is restricted to the interior (zeroed on the one-voxel boundary
+    layer) *before* its divergence is taken, so that the divergence the
+    Poisson solve removes is the divergence of the field that is actually
+    returned.  Taking the divergence first and masking afterwards leaves a
+    residual ``f_boundary / (2h)`` in the layer adjacent to the domain edge
+    whenever the input is non-zero on the boundary layer.
+    """
     nx, ny, nz = fx.shape
     mask_center = np.zeros((nx, ny, nz), dtype=np.float32)
     mask_center[1:-1, 1:-1, 1:-1] = 1.0
+    fx = fx.astype(np.float32, copy=False) * mask_center
+    fy = fy.astype(np.float32, copy=False) * mask_center
+    fz = fz.astype(np.float32, copy=False) * mask_center
 
     div_f = divergence_center(fx, fy, fz, dX, dY, dZ)
     div_f *= mask_center
@@ -844,13 +871,17 @@ def project_vector_field_jax(
     tol,
     max_iters,
 ):
-    """Project a vector field to be divergence-free (JAX)."""
+    """Project a vector field to be divergence-free (JAX).
+
+    See :func:`project_vector_field`: the input is restricted to the interior
+    before its divergence is taken.
+    """
     _require_jax()
-    fx = jnp.asarray(fx, dtype=jnp.float32)
-    fy = jnp.asarray(fy, dtype=jnp.float32)
-    fz = jnp.asarray(fz, dtype=jnp.float32)
     nx, ny, nz = fx.shape
     mask_center = jnp.zeros((nx, ny, nz), dtype=jnp.float32).at[1:-1, 1:-1, 1:-1].set(1.0)
+    fx = jnp.asarray(fx, dtype=jnp.float32) * mask_center
+    fy = jnp.asarray(fy, dtype=jnp.float32) * mask_center
+    fz = jnp.asarray(fz, dtype=jnp.float32) * mask_center
 
     div_f = divergence_center_jax(fx, fy, fz, dX, dY, dZ) * mask_center
 
